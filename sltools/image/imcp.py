@@ -48,7 +48,7 @@ from sltools.image import header_funcs as hf;
 from sltools.coordinate import wcs_conversion as wcsc;
 
 class Interval:
-    def __init__(self, begin, end):
+    def __init__(self, begin = 0, end = 0):
         self.begin = begin
         self.end = end
 
@@ -86,36 +86,29 @@ def _cutcenter(image, hdr, xc, yc, coord_unit):
 
     return int(xc), int(yc)
 
-def _image_patches(image, hdr, xc, yc, x_size, y_size):
-    xbeg = xc - int(x_size / 2)
-    xend = xbeg + x_size
+def _image_patches(image, hdr, x, y, x_size, y_size):
+    ox = Interval()
+    ox.begin = int(max(0, x.begin))
+    ox.end = int(min(image.shape[0], x.end))
 
-    old_xbeg = max(0, xbeg)
-    old_xend = min(image.shape[0], xend)
+    nx = Interval()
+    nx.begin = int(abs(min(0, x.begin)))
+    nx.end = int(x_size - (x.end - ox.end))
 
-    new_xbeg = abs(min(0, xbeg))
-    new_xend = x_size - (xend - old_xend)
+    oy = Interval()
+    oy.begin = int(max(0, y.begin))
+    oy.end = int(min(image.shape[0], y.end))
 
-    ybeg = yc - int(y_size / 2)
-    yend = ybeg + y_size
-
-    old_ybeg = max(0, ybeg)
-    old_yend = min(image.shape[0], yend)
-
-    new_ybeg = abs(min(0, ybeg))
-    new_yend = y_size - (yend - old_yend)
-
-    oldx = Interval(int(old_xbeg), int(old_xend))
-    oldy = Interval(int(old_ybeg), int(old_yend))
-    newx = Interval(int(new_xbeg), int(new_xend))
-    newy = Interval(int(new_ybeg), int(new_yend))
+    ny = Interval()
+    ny.begin = int(abs(min(0, y.begin)))
+    ny.end = int(y_size - (y.end - oy.end))
 
     if hdr:
-        hdr = hf.update_coordinates(hdr.copy(), xbeg, ybeg)
+        hdr = hf.update_coordinates(hdr.copy(), x.begin, y.begin)
         hdr.update(NAXIS1 = x_size)
         hdr.update(NAXIS2 = y_size)
 
-    return oldx, oldy, newx, newy
+    return ox, oy, nx, ny
 
 def cutout(image, hdr = None, coord_unit = 'pixel', xc = 0, yc = 0,
     size_unit = 'pixel', x_size = 0, y_size = 0, mask = None):
@@ -176,7 +169,13 @@ def cutout(image, hdr = None, coord_unit = 'pixel', xc = 0, yc = 0,
         return False, False
     logging.info("Central point for output image: %s", (xc, yc))
 
-    oldx, oldy, newx, newy = _image_patches(image, hdr, xc, yc, x_size, y_size)
+    x = xc - int(x_size / 2)
+    x = Interval(x, x + x_size)
+
+    y = yc - int(y_size / 2)
+    y = Interval(y, y + y_size)
+
+    oldx, oldy, newx, newy = _image_patches(image, hdr, x, y, x_size, y_size)
 
     newimage = np.zeros((int(y_size), int(x_size)), dtype = image.dtype)
     newimage[newy.begin : newy.end, newx.begin : newx.end] = image[oldy.begin : oldy.end, oldx.begin : oldx.end]
@@ -186,7 +185,7 @@ def cutout(image, hdr = None, coord_unit = 'pixel', xc = 0, yc = 0,
     #
     if mask:
         ind_z = np.where(newimage == 0)
-        mask = mask[0] - y_ini, mask[1] - x_ini
+        mask = mask[0] - y.begin, mask[1] - x.begin
 
         zip_m = zip(mask[0], mask[1])
         zip_z = zip(ind_z[0], ind_z[1])
@@ -255,6 +254,8 @@ def segstamp(segimg, objID, objimg=None, hdr=None, increase=0, relative_increase
 
     y_min = min( ind[0] );
     x_min = min( ind[1] );
+
+    print x_min, y_min
 
     y_idx = ind[0] - y_min;
     x_idx = ind[1] - x_min;
