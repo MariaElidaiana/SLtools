@@ -91,8 +91,9 @@ if opts.segimg:
     IDs = [ int(ID) for ID in re.split(',', opts.IDs) ]
 
     seghdu = pyfits.open(opts.segimg, memmap = True)
-    seg = hdulist[0].data
-    hdr = hdulist[0].header
+    seg = seghdu[0].data
+    hdr = seghdu[0].header
+    print(opts.segimg)
 
     if prefix == '':
         prefix = 'pstamp'
@@ -101,11 +102,11 @@ if opts.segimg:
       outpath = '%s_%s.fits' % (prefix, IDs[i])
       print opts.segimg, infits
 
-      images, headers = imcp.segstamp(seg, IDs[i], objimg = image,
+      image, header = imcp.segstamp(seg, IDs[i], objimg = image,
           hdr = hdr, increase = opts.incr, relative_increase = opts.rel_incr)
 
       try:
-          pyfits.writeto(outpath, images[i], headers[i])
+          pyfits.writeto(outpath, image, header)
       except IOError as e:
           sys.stderr.write('error: %s\n' % e)
           sys.exit(1)
