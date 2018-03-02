@@ -6,7 +6,6 @@ import re
 import datetime
 import argparse
 
-from optparse import OptionParser
 from sltools.image import sextractor
 
 #
