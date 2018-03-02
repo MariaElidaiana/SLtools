@@ -145,18 +145,21 @@ if len(args) < 1:
 
 
 infiles = []
-overrides = ''
+overrides = []
 
 i = 0
 while i < len(args):
     arg = args[i]
     if arg[0] == '-':
-        overrides = '%s %s %s' % (overrides, arg, args[i+1])
+        overrides.append(args[i])
+        overrides.append(args[i+1])
         i = i + 1
     else:
         infiles.append(arg)
     i = i + 1
 
+print infiles
+print overrides
 rundir, config, params, inpaths = setup(opts.config_path, opts.params_path, infiles, overrides)
 
 for infits in inpaths:
