@@ -77,6 +77,9 @@ def create_status(now, config_path, params_path, images_paths):
     status.write(now + ',' + config_path + ',' + params_path + ',' + images + '\n')
     status.close()
 
+def absolute_link(src, dst):
+    os.symlink(os.path.abspath(src), dst)
+
 def setup(config_path, params_path, images_paths, cmdline_config):
     rundir, now = create_rundir()
 
@@ -85,16 +88,15 @@ def setup(config_path, params_path, images_paths, cmdline_config):
 
     params = params_path and [ line.rstrip('\n') for line in open(params_path).readlines() ] or []
 
-    os.chdir(rundir)
-
     new_images_paths = []
     for image_path in images_paths:
-        relpath = os.path.relpath(image_path, rundir)
-        image_link = os.path.basename(image_path)
-        new_images_paths.append(image_link)
-        os.symlink(relpath, image_link)
+        link_path = os.path.basename(image_path)
+        absolute_link(image_path, '%s/%s' % (rundir, link_path))
+        new_images_paths.append(link_path)
 
-    os.symlink('../default.conv', 'default.conv')
+    absolute_link('default.conv', '%s/default.conv' % rundir)
+
+    os.chdir(rundir)
 
     dictsave(config, os.path.basename(config_path))
     listsave(params, os.path.basename(params_path))
