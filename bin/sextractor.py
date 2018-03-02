@@ -114,8 +114,8 @@ def setup(config_path, params_path, images_paths, cmdline_config):
 
     os.chdir(rundir)
 
-    dictsave(config, os.path.basename(config_path))
-    listsave(params, os.path.basename(params_path))
+    dictsave(config, os.path.basename('default.sex'))
+    listsave(params, os.path.basename('default.param'))
 
     create_status(now, config_path, params_path, new_images_paths)
     return rundir, config, params, new_images_paths
