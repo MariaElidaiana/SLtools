@@ -127,6 +127,7 @@ parser.add_argument('-p', dest = 'params_path', default = 'default.param',
     help = 'SExtractor params file')
 parser.add_argument('-c', dest = 'config_path', default = 'default.sex',
     help = 'SExtractor config file')
+parser.add_argument('-nproc', type = int, help = 'Number of processors')
 parser.add_argument('-segobj', action = 'store_true',
     help = 'Run sextractor in SEGMENTATION mode')
 parser.add_argument('-list-presets', action = 'store_true',
@@ -153,18 +154,25 @@ if args.segobj:
 else:
     run = sextractor.run
 
-procs = []
-for infile in infiles:
-    lastdot = infile.rfind('.fits')
-    catalog_name = infile[:lastdot] + '_cat.' + infile[lastdot+1:]
-    config.update({'CATALOG_TYPE': 'FITS_1.0', 'CATALOG_NAME': catalog_name})
+nproc = args.nproc or len(infiles)
+nparallel = len(infiles)/nproc
 
-    p = Process(target=process_file, args=(infile, run, params, config,
-            args.preset, args.quiet))
-    procs.append(p)
-    p.start()
+print 'Running %d parallel threads' % nparallel
 
-for p in procs:
-    p.join()
+for i in range(0, nparallel):
+    procs = []
+
+    for infile in infiles:
+        lastdot = infile.rfind('.fits')
+        catalog_name = infile[:lastdot] + '_cat.' + infile[lastdot+1:]
+        config.update({'CATALOG_TYPE': 'FITS_1.0', 'CATALOG_NAME': catalog_name})
+
+        p = Process(target=process_file, args=(infile, run, params, config,
+                args.preset, args.quiet))
+        procs.append(p)
+        p.start()
+
+    for p in procs:
+        p.join()
 
 print 'Output directory: ' + rundir
