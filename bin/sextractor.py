@@ -144,18 +144,21 @@ if args.list_presets:
     print 'Available instruments: %s' % inst
     sys.exit(0)
 
+infiles, overrides = parse_rest(args.files)
+rundir, config, params, infiles = setup(args.config_path, args.params_path,
+    infiles, overrides)
+
 if args.segobj:
     run = sextractor.run_segobj
 else:
     run = sextractor.run
 
-
-infiles, overrides = parse_rest(args.files)
-rundir, config, params, infiles = setup(args.config_path, args.params_path,
-    infiles, overrides)
-
 procs = []
 for infile in infiles:
+    lastdot = infile.rfind('.')
+    catalog_name = infile[:lastdot] + '_cat.' + infile[lastdot+1:]
+    config.update({'CATALOG_TYPE': 'FITS_1.0', 'CATALOG_NAME': catalog_name})
+
     p = Process(target=process_file, args=(infile, run, params, config,
             args.preset, args.quiet))
     procs.append(p)
