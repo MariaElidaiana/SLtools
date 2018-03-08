@@ -155,14 +155,16 @@ else:
     run = sextractor.run
 
 nproc = args.nproc or len(infiles)
-nparallel = len(infiles)/nproc
+nblock = len(infiles) / nproc
+if (len(infiles) % nproc) > 0:
+    nblock = nblock + 1
 
-print 'Running %d parallel threads' % nparallel
-
-for i in range(0, nparallel):
+for i in range(0, nblock):
+    start = i * nproc
+    end = (i+1) * nproc
     procs = []
 
-    for infile in infiles:
+    for infile in infiles[start:end]:
         lastdot = infile.rfind('.fits')
         catalog_name = infile[:lastdot] + '_cat.' + infile[lastdot+1:]
         config.update({'CATALOG_TYPE': 'FITS_1.0', 'CATALOG_NAME': catalog_name})
