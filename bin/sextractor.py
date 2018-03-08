@@ -155,7 +155,7 @@ else:
 
 procs = []
 for infile in infiles:
-    lastdot = infile.rfind('.')
+    lastdot = infile.rfind('.fits')
     catalog_name = infile[:lastdot] + '_cat.' + infile[lastdot+1:]
     config.update({'CATALOG_TYPE': 'FITS_1.0', 'CATALOG_NAME': catalog_name})
 
