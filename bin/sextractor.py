@@ -65,6 +65,9 @@ def parse_overrides(args):
 
     return infiles, overrides
 
+def parse_params(path):
+    return path and [ line.rstrip('\n') for line in open(path).readlines() ] or []
+
 def override_config(config, overrides):
     for key in overrides:
         config[key] = overrides[key]
@@ -95,8 +98,7 @@ def setup(config_path, params_path, images_paths, cmdline_config):
 
     config = getconfig(config_path)
     config = override_config(config, cmdline_config)
-
-    params = params_path and [ line.rstrip('\n') for line in open(params_path).readlines() ] or []
+    params = parse_params(params_path)
 
     new_images_paths = []
     for image_path in images_paths:
@@ -105,7 +107,7 @@ def setup(config_path, params_path, images_paths, cmdline_config):
         new_images_paths.append(link_path)
 
     absolute_link('default.conv', '%s/default.conv' % rundir)
-
+    absolute_link('default.psfex', '%s/default.psfex' % rundir)
     os.chdir(rundir)
 
     save(config, os.path.basename('default.sex'), dict_format)
