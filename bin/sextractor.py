@@ -46,7 +46,7 @@ def getconfig(path):
         file = []
     return dict_read(file)
 
-def parse_rest(args):
+def parse_overrides(args):
     infiles = []
     overrides = {}
 
@@ -145,7 +145,7 @@ if args.list_presets:
     print 'Available instruments: %s' % inst
     sys.exit(0)
 
-infiles, overrides = parse_rest(args.files)
+infiles, overrides = parse_overrides(args.files)
 rundir, config, params, infiles = setup(args.config_path, args.params_path,
     infiles, overrides)
 
